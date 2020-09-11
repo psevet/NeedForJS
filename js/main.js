@@ -1,11 +1,17 @@
 const score = document.querySelector(".score"),
   start = document.querySelector(".start"),
   gameArea = document.querySelector(".game-area"),
+  easy = document.queryCommandValue("#easy"),
+  medium = document.queryCommandValue("#medium"),
+  hard = document.queryCommandValue("#hard"),
+  topScore = document.querySelector('.top-score'),
   car = document.createElement("div");
 car.classList.add("car");
 start.addEventListener("click", startGame);
+
 document.addEventListener("keydown", startRun);
 document.addEventListener("keyup", stopRun);
+
 
 const keys = {
   ArrowUp: false,
@@ -16,14 +22,46 @@ const keys = {
 const setting = {
   start: false,
   score: 0,
-  speed: 3,
-  traffic: 3
+  speed: 0,
+  traffic: 0,
+  level: 0
 };
+
+let level = setting.level;
+
+const result = parseInt(localStorage.getItem('nfjs_score', setting.score));
+
+topScore.textContent = result ? result : 0;
+
+const addLocalStorage = () => {
+  if (result < setting.score) {
+    localStorage.setItem('nfjs_score', setting.score);
+    topScore.textContent = setting.score;
+  }
+}
 
 function getQuantityElements(heightElement) {
   return document.documentElement.clientHeight / heightElement + 1;
 }
-function startGame() {
+function startGame(event) {
+  const target = event.target;
+  if (target === start) return;
+
+  switch (target.id) {
+    case 'easy':
+      setting.speed = 3;
+      setting.traffic = 4;
+      break;
+    case 'medium':
+      setting.speed = 5;
+      setting.traffic = 3;
+      break;
+    case 'hard':
+      setting.speed = 8;
+      setting.traffic = 2;
+      break;
+  }
+
   start.classList.add("hide");
   gameArea.innerHTML = '';
   gameArea.classList.remove("hide");
@@ -54,6 +92,13 @@ function startGame() {
   requestAnimationFrame(playGame);
 }
 function playGame() {
+
+  setting.level = Math.floor(setting.score / 1000);
+
+  if (setting.level !== level) {
+    level = setting.level;
+    setting.speed += 1;
+  }
   if (setting.start) {
     setting.score += setting.speed;
     score.innerHTML = 'Score:<br>' + setting.score;
@@ -110,6 +155,7 @@ function moveEnemy() {
       setting.start = false;
       start.classList.remove('hide');
       start.style.top = score.offsetHeight + 'px';
+      addLocalStorage();
     }
     item.y += setting.speed / 2;
     item.style.top = item.y + 'px';
